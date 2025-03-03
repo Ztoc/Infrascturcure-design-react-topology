@@ -1,24 +1,231 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 210 20% 98%;
+    --foreground: 220 15% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 16%;
+
+    --primary: 215 90% 55%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 215 20% 92%;
+    --secondary-foreground: 220 15% 16%;
+
+    --muted: 210 20% 92%;
+    --muted-foreground: 215 12% 46%;
+
+    --accent: 215 99% 65%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 32% 88%;
+    --input: 215 32% 88%;
+    --ring: 215 90% 55%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 14% 34%;
+    --sidebar-primary: 215 90% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 20% 92%;
+    --sidebar-accent-foreground: 215 14% 34%;
+    --sidebar-border: 215 32% 92%;
+    --sidebar-ring: 215 90% 55%;
+  }
+
+  .dark {
+    --background: 220 30% 10%;
+    --foreground: 210 10% 96%;
+
+    --card: 220 25% 11%;
+    --card-foreground: 210 10% 96%;
+
+    --popover: 220 25% 11%;
+    --popover-foreground: 210 10% 96%;
+
+    --primary: 215 90% 60%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 210 10% 96%;
+
+    --muted: 215 30% 18%;
+    --muted-foreground: 215 12% 70%;
+
+    --accent: 215 99% 65%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 30% 18%;
+    --input: 215 30% 18%;
+    --ring: 215 90% 60%;
+    
+    --sidebar-background: 220 25% 9%;
+    --sidebar-foreground: 215 14% 85%;
+    --sidebar-primary: 215 90% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 18%;
+    --sidebar-accent-foreground: 215 14% 85%;
+    --sidebar-border: 215 30% 18%;
+    --sidebar-ring: 215 90% 60%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 hover:bg-muted-foreground/50 rounded-full transition-colors;
+  }
+
+  /* Glass morphism classes */
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/60 border border-white/20 dark:border-gray-800/30;
+  }
+  
+  .glass-card {
+    @apply glass shadow-md;
+  }
+  
+  /* Animation classes */
+  .animate-on-load {
+    @apply opacity-0 animate-fade-in;
+    animation-fill-mode: forwards;
+    animation-delay: 100ms;
+  }
+  
+  .animate-on-load-delay-1 {
+    animation-delay: 200ms;
+  }
+  
+  .animate-on-load-delay-2 {
+    animation-delay: 300ms;
+  }
+  
+  .animate-on-load-delay-3 {
+    animation-delay: 400ms;
+  }
 }
+
+@layer components {
+  .tab-button {
+    @apply relative px-4 py-2 text-sm font-medium transition-colors rounded-full;
+    @apply text-foreground/60 hover:text-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary;
+  }
+  
+  .tab-button.active {
+    @apply text-foreground bg-secondary;
+  }
+  
+  .table-wrapper {
+    @apply w-full overflow-auto rounded-lg border;
+  }
+  
+  .data-table {
+    @apply w-full text-sm;
+  }
+  
+  .data-table thead {
+    @apply bg-muted/50;
+  }
+  
+  .data-table th {
+    @apply px-4 py-3 text-left font-medium text-muted-foreground;
+  }
+  
+  .data-table tr {
+    @apply border-b border-border/50 last:border-0;
+  }
+  
+  .data-table td {
+    @apply px-4 py-3;
+  }
+  
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
+  }
+  
+  .status-badge.online {
+    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+  }
+  
+  .status-badge.offline {
+    @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+  }
+  
+  .status-badge.warning {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+  }
+  
+  /* Dropdown menu */
+
+  
+  .dropdown-menu {
+    @apply hidden absolute z-10 mt-2 rounded-md shadow-lg glass;
+    @apply group-hover:block;
+  }
+}
+
+/* Add full height styles for topology components */
+
+
+.pf-topology-view {
+  display: flex;
+  flex-direction: column;
+  height: 100% !important;
+}
+
+.pf-topology__group__background {
+  fill: rgba(150, 147, 197, 0.5) !important;
+}
+
+.pf-m-selected .pf-topology__group__background {
+  fill: rgba(164, 179, 219, 0.8) !important;
+  stroke: rgba(164, 179, 219,1) !important;
+}
+
+.pf-topology__node__background {
+  fill: rgba(183, 240, 192, 0.8) !important;
+  stroke: rgb(150, 151, 76) !important;
+  stroke-width: 2px !important;
+}
+
+.pf-m-selected .pf-topology__node__background {
+  fill: rgba(224, 176, 130, 0.8) !important;
+}
+
+.pf-topology__node__label__background {
+  fill: rgba(183, 240, 192, 0.8) !important;
+}
+
