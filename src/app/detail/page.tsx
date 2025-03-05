@@ -1,21 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Settings,
-  Download,
-  Upload,
   Eye,
   EyeOff,
   GripVertical,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import { toast } from "sonner";
+
 import PageLayout from "@/components/PageLayout";
 import { cn } from "@/lib/utils";
 
-// Mock data for the infrastructure table
 interface InfrastructureItem {
   id: string;
   department: string;
@@ -246,20 +244,22 @@ export default function CustomTable() {
   );
 
   // Sort data
-  const sortedData = [...filteredData].sort((a: any, b: any) => {
-    if (!sortConfig.key) return 0;
+  const sortedData = [...filteredData].sort(
+    (a: InfrastructureItem, b: InfrastructureItem) => {
+      if (!sortConfig.key) return 0;
 
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
+      const aValue = a[sortConfig.key as keyof InfrastructureItem];
+      const bValue = b[sortConfig.key as keyof InfrastructureItem];
 
-    if (aValue < bValue) {
-      return sortConfig.direction === "ascending" ? -1 : 1;
+      if (aValue < bValue) {
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "ascending" ? 1 : -1;
+      }
+      return 0;
     }
-    if (aValue > bValue) {
-      return sortConfig.direction === "ascending" ? 1 : -1;
-    }
-    return 0;
-  });
+  );
 
   // Handle column sort
   const handleSort = (columnId: string) => {
@@ -313,14 +313,6 @@ export default function CustomTable() {
           >
             <Settings size={16} />
             <span>Customize Columns</span>
-          </button>
-
-          <button
-            onClick={() => toast.success("Table data exported successfully")}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-          >
-            <Download size={16} />
-            <span>Export</span>
           </button>
         </div>
       </div>
@@ -459,7 +451,9 @@ export default function CustomTable() {
                               item.status.slice(1)}
                           </span>
                         ) : (
-                          (item as any)[column.id]
+                          (item as InfrastructureItem)[
+                            column.id as keyof InfrastructureItem
+                          ]
                         )}
                       </td>
                     ))}

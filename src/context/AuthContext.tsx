@@ -1,11 +1,10 @@
-import { useLazyQuery, useQuery } from "@apollo/client";
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
+import { useQuery } from "@apollo/client";
+import { useRouter, usePathname } from "next/navigation";
 import { useInterval } from "react-use";
 import useSound from "use-sound";
 
-import { READ_DIAGRAM, READ_IP } from "@/app/structure/Diagram";
+import { READ_DIAGRAM } from "@/app/structure/Diagram";
 
 const SECURITY_STORAGE_ITEM = "total-security";
 
@@ -43,12 +42,18 @@ type Alarm = {
 // Define the type for nodes (adjust according to your actual node structure)
 type NodeType = {
   // Define properties of the node here
+  id: string;
+  data: {
+    ipAddress: string;
+    isAlarm: boolean;
+    confirmed: boolean;
+  };
 };
 
 type IAuthContext = {
   speedLog: { alarms: Alarm[] };
   serverLogs: ServerLog[];
-  alarmAreas: String[];
+  alarmAreas: string[];
   authenticated: boolean;
   isAdmin: boolean;
   setAuthenticated: (newState: boolean) => void;
@@ -80,20 +85,15 @@ const initialValue = {
 const AuthContext = createContext<IAuthContext>(initialValue);
 
 const AuthProvider = ({ children }: Props) => {
-  const [getIPTitle] = useLazyQuery(READ_IP);
+  // const [getIPTitle] = useLazyQuery(READ_IP);
 
   const [play, { stop }] = useSound("assets/alarm.wav", {
     soundEnabled: true,
   });
   const router = useRouter();
   const location = usePathname();
-  const {
-    error,
-    loading: sitesLoading,
-    data: sitesData,
-    refetch,
-  } = useQuery(READ_DIAGRAM, {
-    variables: { org: "sites" },
+  const { data: sitesData } = useQuery(READ_DIAGRAM, {
+    variables: { org: "all" },
     fetchPolicy: "no-cache",
   });
 
@@ -102,7 +102,7 @@ const AuthProvider = ({ children }: Props) => {
     initialValue.authenticated
   );
   const [isAdmin, setAdmin] = useState(initialValue.isAdmin);
-  const [speedLog, setSpeedLog] = useState(initialValue.speedLog);
+  const [speedLog] = useState(initialValue.speedLog);
   const [serverLogs, setServerLogs] = useState<ServerLog[]>(
     initialValue.serverLogs
   );
@@ -137,22 +137,10 @@ const AuthProvider = ({ children }: Props) => {
     }
   };
 
-  const addAlarmArea = (area: string, isAlarm: boolean) => {
-    if (isAlarm) {
-      const includesAlarmArea = alarmAreas.includes(area);
-      if (includesAlarmArea === false) {
-        setAlarmAreas([...alarmAreas, area]);
-      }
-    } else {
-      const updatedAlarms = alarmAreas.filter((item) => item !== area);
-      setAlarmAreas([...updatedAlarms]);
-    }
-  };
-
   const checkSitesAlarm = () => {
     const alarmStatus: boolean = serverLogs.some((item) => {
       const index = nodes.findIndex(
-        (node: any) => node.data.ipAddress === item.IP
+        (node: NodeType) => node.data.ipAddress === item.IP
       );
 
       if (index === -1) {
@@ -161,7 +149,6 @@ const AuthProvider = ({ children }: Props) => {
         return item.isAlarm === true && item.confirmed === false;
       }
     });
-    console.log("result", alarmStatus);
 
     return alarmStatus;
   };

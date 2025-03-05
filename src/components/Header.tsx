@@ -4,7 +4,7 @@ import { Sun, Moon, Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
+import Link from "next/link"; 
 
 import { cn } from "@/lib/utils";
 
@@ -34,10 +34,8 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Check if user is logged in
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(
-    null
-  );
+  const [isLoggedIn] = useState(false);
+  const [user] = useState<{ name?: string; email?: string } | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

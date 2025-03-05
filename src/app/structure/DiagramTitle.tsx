@@ -1,23 +1,8 @@
-import { Organization } from "./page";
-
-type DiagramTitleProps = {
-  org: Organization;
+export const getDiagramTitle = (org: string): string => {
+  return "ISP";
 };
 
-export const getDiagramTitle = (org: Organization): string => {
-  switch (org) {
-    case Organization.ISP:
-      return "Internet ";
-    case Organization.SITES:
-      return "Foreign";
-    case Organization.ORG_609:
-      return "Internet research";
-    case Organization.ORG_626:
-      return "KW";
-  }
-};
-
-export default function DiagramTitle({ org }: DiagramTitleProps) {
+export default function DiagramTitle({ org }: { org: string }) {
   console.log(org);
   return (
     <div className="flex justify-center align-items">

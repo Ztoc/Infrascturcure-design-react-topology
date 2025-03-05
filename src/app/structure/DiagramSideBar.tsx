@@ -1,6 +1,6 @@
 import { NodeModel } from "@patternfly/react-topology";
-import { useContext, useEffect } from "react";
-import { AuthContext } from "@/context/AuthContext";
+import { useEffect } from "react";
+// import { AuthContext } from "@/context/AuthContext";
 // import Donut from "../abroad/widgets/Donut";
 
 type DiagramSideBarProps = {
@@ -8,7 +8,7 @@ type DiagramSideBarProps = {
 };
 
 const DiagramSideBar = ({ node }: DiagramSideBarProps) => {
-  const { confirmAlarm } = useContext(AuthContext);
+  // const { confirmAlarm } = useContext(AuthContext);
 
   console.log(node);
   useEffect(() => {

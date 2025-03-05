@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Settings,
   Download,
-  Upload,
   Eye,
   EyeOff,
   GripVertical,
@@ -246,20 +245,22 @@ export default function CustomTable() {
   );
 
   // Sort data
-  const sortedData = [...filteredData].sort((a: any, b: any) => {
-    if (!sortConfig.key) return 0;
+  const sortedData = [...filteredData].sort(
+    (a: InfrastructureItem, b: InfrastructureItem) => {
+      if (!sortConfig.key) return 0;
 
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
+      const aValue = a[sortConfig.key as keyof InfrastructureItem];
+      const bValue = b[sortConfig.key as keyof InfrastructureItem];
 
-    if (aValue < bValue) {
-      return sortConfig.direction === "ascending" ? -1 : 1;
+      if (aValue < bValue) {
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "ascending" ? 1 : -1;
+      }
+      return 0;
     }
-    if (aValue > bValue) {
-      return sortConfig.direction === "ascending" ? 1 : -1;
-    }
-    return 0;
-  });
+  );
 
   // Handle column sort
   const handleSort = (columnId: string) => {
@@ -459,7 +460,9 @@ export default function CustomTable() {
                               item.status.slice(1)}
                           </span>
                         ) : (
-                          (item as any)[column.id]
+                          (item as InfrastructureItem)[
+                            column.id as keyof InfrastructureItem
+                          ]
                         )}
                       </td>
                     ))}

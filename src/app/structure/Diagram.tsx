@@ -2,10 +2,6 @@
 
 import React from "react";
 
-import Server from "../../assets/server.svg";
-import Branch from "../../assets/branch.svg";
-import Building from "../../assets/building.svg";
-
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   BaseNode,
@@ -55,11 +51,11 @@ import {
 import gql from "graphql-tag";
 import _, { uniqueId } from "lodash";
 import { useContext } from "react";
-import { AuthContext } from "@/context/AuthContext";
-import useSound from "use-sound";
-import DiagramSideBar from "./DiagramSideBar";
+// import useSound from "use-sound";
+
 import Toolbar, { DrawItemType, IconType } from "./Toolbar";
-import { Organization } from "./page";
+import { AuthContext } from "@/context/AuthContext";
+import DiagramSideBar from "./DiagramSideBar";
 import DiagramTitle from "./DiagramTitle";
 import {
   Dialog,
@@ -69,12 +65,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EditIcon } from "lucide-react";
 import ServerIcon from "@/components/icons/ServerIcon";
 import DepartmentIcon from "@/components/icons/DepartmentIcon";
 import BranchIcon from "@/components/icons/BranchIcon";
 
 const getIconComponent = (icon: IconType) => {
+  console.log("icon", icon);
   switch (icon) {
     case IconType.SERVER_ICON:
       return <ServerIcon />;
@@ -84,6 +80,19 @@ const getIconComponent = (icon: IconType) => {
       return <DepartmentIcon />;
     default:
       return <BranchIcon />;
+  }
+};
+
+const getShape = (item: DrawItemType) => {
+  switch (item) {
+    case DrawItemType.ADD_SERVER:
+      return NodeShape.circle;
+    case DrawItemType.ADD_BRANCH:
+      return NodeShape.rhombus;
+    case DrawItemType.ADD_DEPARTMENT:
+      return NodeShape.rect;
+    default:
+      return NodeShape.hexagon;
   }
 };
 
@@ -127,6 +136,7 @@ export const READ_DIAGRAM = gql(`
           badge
           icon
           ipAddress
+          isRoot
         }
         children
         group
@@ -192,10 +202,11 @@ const CustomNode: React.FC<
 > = ({ element, selected, onSelect, ...rest }) => {
   const data = element.getData();
 
+  console.log("data", data);
+
   const badgeColors =
     BadgeColors.find((badgeColor) => badgeColor.name === data.badge) ||
     BadgeColors[0];
-  console.log(data.icon);
   return (
     <DefaultNode
       element={element}
@@ -285,14 +296,10 @@ const customComponentFactory: ComponentFactory = (
   }
 };
 
-type DiagramProps = {
-  organization: Organization;
-};
-
-const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
-  const [play, { stop }] = useSound("assets/alarm.wav", {
-    soundEnabled: true,
-  });
+const Diagram: React.FC<{ org: string }> = ({ org }) => {
+  // const [play, { stop }] = useSound("assets/alarm.wav", {
+  //   soundEnabled: true,
+  // });
 
   const { isAdmin, serverLogs, confirmAlarm } = useContext(AuthContext);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -303,7 +310,7 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
   });
 
   const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
+  // const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [caption, setCaption] = React.useState("");
 
@@ -312,9 +319,10 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
     loading,
     data: diagram,
   } = useQuery(READ_DIAGRAM, {
-    variables: { org: organization },
+    variables: { org: "all" },
     fetchPolicy: "network-only",
   });
+
   const [getIPTitle] = useLazyQuery(READ_IP);
   const [saveDiagram] = useMutation(SAVE_DIAGRAM);
 
@@ -340,6 +348,7 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
     dragEvent: DragEvent,
     operation: DragOperationType
   ) => {
+    console.log("dragFunc", dragModel, dragEvent, operation);
     setModel(controller.toModel());
   };
 
@@ -388,9 +397,9 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
     return newController;
   }, []);
 
-  const isInEdges = (id: string) => {
-    return model.edges ? model.edges.some((item) => item.id === id) : false;
-  };
+  // const isInEdges = (id: string) => {
+  //   return model.edges ? model.edges.some((item) => item.id === id) : false;
+  // };
 
   const isInNodes = (id: string) => {
     return model.nodes ? model.nodes.some((item) => item.id === id) : false;
@@ -415,11 +424,11 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
   const getIcon = (item: DrawItemType) => {
     switch (item) {
       case DrawItemType.ADD_BRANCH:
-        return { title: "Branch", icon: Branch };
+        return { title: "Branch", icon: "BranchIcon" };
       case DrawItemType.ADD_DEPARTMENT:
-        return { title: "Department", icon: Building };
+        return { title: "Department", icon: "DepartmentIcon" };
       case DrawItemType.ADD_SERVER:
-        return { title: "Server", icon: Server };
+        return { title: "Server", icon: "ServerIcon" };
       default:
         return undefined;
     }
@@ -433,6 +442,8 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
       case DrawItemType.ADD_ROUTER:
       case DrawItemType.ADD_SWITCH:
       case DrawItemType.ADD_FIREWALL:
+      case DrawItemType.ADD_BRANCH:
+      case DrawItemType.ADD_DEPARTMENT:
         const nodeId = getNewId();
         const iconData = getIcon(item);
         if (!iconData) return;
@@ -443,7 +454,7 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
         const newNode: NodeModel = {
           id: `node-` + nodeId,
           label,
-          shape: NodeShape.hexagon,
+          shape: getShape(item),
           children: [],
           type: "node",
           width: NODE_DIAMETER,
@@ -451,6 +462,7 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
           data: {
             icon,
             ipAddress: label,
+            isRoot: false,
           },
           x: 100,
           y: 100,
@@ -529,7 +541,7 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
         );
 
         if (indexToRemove !== -1) {
-          let newEdges = [...model.edges];
+          const newEdges = [...model.edges];
           newEdges.splice(indexToRemove, 1);
           setModel({
             ...model,
@@ -604,10 +616,12 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
       case DrawItemType.SAVE_DIAGRAM:
         if (!model.graph || !model.nodes || !model.edges) return;
 
+        console.log("model", model.nodes);
+
         saveDiagram({
           variables: {
             diagram: {
-              organization,
+              organization: org,
               graph: {
                 id: model.graph.id,
                 layout: model.graph.layout,
@@ -641,8 +655,11 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
                   y,
                   data: {
                     badge: data?.badge,
-                    icon: data?.icon?.displayName,
+                    icon:
+                      data?.icon?.displayName ||
+                      (typeof data?.icon === "string" ? data?.icon : ""),
                     ipAddress: data?.ipAddress,
+                    isRoot: data?.isRoot || false,
                   },
                   children,
                   group,
@@ -692,7 +709,8 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
                 label: ipTitle === "" ? item.data.ipAddress : ipTitle,
                 data: {
                   ...item.data,
-                  icon: getIconComponent(item.data.icon),
+                  icon: item.data.icon,
+                  isRoot: item.data.isRoot || false,
                 },
               },
             ];
@@ -739,6 +757,8 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
                   : NodeStatus.default;
             }
           });
+
+          console.log("updatedNodes", updatedNodes);
           setModel({ graph, edges, nodes: [...updatedNodes] });
         });
       } else {
@@ -799,13 +819,9 @@ const Diagram: React.FC<DiagramProps> = ({ organization }: DiagramProps) => {
       sideBar={isAdmin ? null : <ServerSideBar />}
       contextToolbar={
         isAdmin ? (
-          <Toolbar
-            org={organization}
-            onAdd={handleAdd}
-            count={selectedIds.length}
-          />
+          <Toolbar org={org} onAdd={handleAdd} count={selectedIds.length} />
         ) : (
-          <DiagramTitle org={organization} />
+          <DiagramTitle org={org} />
         )
       }
     >

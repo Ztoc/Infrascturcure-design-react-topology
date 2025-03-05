@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { DrawItemType } from "./Toolbar";
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,8 @@ type SplitButtonProps = {
   };
 };
 
-export default function SplitButton({ onAdd, options }: SplitButtonProps) {
-  const [selectedIndex, setSelectedIndex] = React.useState(1);
+const SplitButton = ({ onAdd, options }: SplitButtonProps) => {
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
 
   const handleClick = () => {
     onAdd(options.items[selectedIndex].item);
@@ -62,4 +62,6 @@ export default function SplitButton({ onAdd, options }: SplitButtonProps) {
       </DropdownMenu>
     </div>
   );
-}
+};
+
+export default SplitButton;

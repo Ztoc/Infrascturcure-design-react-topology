@@ -74,7 +74,7 @@ export default function Monitor() {
   const [serverData, setServerData] = useState<ServerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshCount, setRefreshCount] = useState(0);
+  // const [refreshCount, setRefreshCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +89,7 @@ export default function Monitor() {
 
     // Set up real-time updates
     const intervalId = setInterval(() => {
-      setRefreshCount((prev) => prev + 1);
+      // setRefreshCount((prev) => prev + 1);
       // Update a random server's status/metrics for real-time effect
       setServerData((prevData) => {
         const newData = [...prevData];
@@ -133,7 +133,7 @@ export default function Monitor() {
   );
 
   const handleRefresh = () => {
-    setRefreshCount((prev) => prev + 1);
+    // setRefreshCount((prev) => prev + 1);
     setServerData(generateMockData());
   };
 

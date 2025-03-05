@@ -1,15 +1,14 @@
 import { BanIcon, TableIcon, CloseIcon } from "@patternfly/react-icons";
 import { EditIcon, NetworkIcon, TrashIcon } from "lucide-react";
 import { SaveIcon } from "@patternfly/react-icons";
-import Image from "next/image";
 
-import Department from "../../assets/building.png";
 import { getDiagramTitle } from "./DiagramTitle";
 import { Button } from "@/components/ui/button";
-import Branch from "../../assets/branch.png";
-import Server from "../../assets/server.png";
 import SplitButton from "./SplitButton";
 import { Organization } from "./page";
+import BranchIcon from "@/components/icons/BranchIcon";
+import DepartmentIcon from "@/components/icons/DepartmentIcon";
+import ServerIcon from "@/components/icons/ServerIcon";
 
 export enum DrawItemType {
   ADD_BRANCH = "BRANCH",
@@ -42,41 +41,17 @@ const optionsNodes = {
   items: [
     {
       title: "Branch",
-      icon: (
-        <Image
-          src={Branch}
-          alt="Branch"
-          className="rounded-[2px]"
-          width={20}
-          height={20}
-        />
-      ),
+      icon: <BranchIcon />,
       item: DrawItemType.ADD_BRANCH,
     },
     {
       title: "Department",
-      icon: (
-        <Image
-          src={Department}
-          alt="Department"
-          className="rounded-[2px]"
-          width={20}
-          height={20}
-        />
-      ),
+      icon: <DepartmentIcon />,
       item: DrawItemType.ADD_DEPARTMENT,
     },
     {
       title: "Server",
-      icon: (
-        <Image
-          src={Server}
-          alt="Server"
-          className="rounded-[2px]"
-          width={20}
-          height={20}
-        />
-      ),
+      icon: <ServerIcon />,
       item: DrawItemType.ADD_SERVER,
     },
   ],

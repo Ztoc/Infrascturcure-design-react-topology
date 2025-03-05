@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { gql, useLazyQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
@@ -52,8 +52,6 @@ export default function Login() {
   const [checkPassword] = useLazyQuery(CHECK_PASSWORD);
 
   const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormType>({
     mode: "onChange",
