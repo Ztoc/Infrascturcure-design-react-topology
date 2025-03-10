@@ -1,4 +1,4 @@
-const ServerIcon = () => (
+const BranchIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="40"
@@ -21,4 +21,4 @@ const ServerIcon = () => (
   </svg>
 );
 
-export default ServerIcon;
+export default BranchIcon;

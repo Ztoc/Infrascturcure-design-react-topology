@@ -1,153 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@apollo/client";
+import { toast } from "sonner";
 import {
   Settings,
-  Download,
   Eye,
   EyeOff,
   GripVertical,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import { toast } from "sonner";
+
 import PageLayout from "@/components/PageLayout";
+
+import { InfrastructureItem, Column } from "@/type";
+import { GET_SERVER_NODES } from "../../query";
 import { cn } from "@/lib/utils";
-
-// Mock data for the infrastructure table
-interface InfrastructureItem {
-  id: string;
-  department: string;
-  description: string;
-  type: "server" | "switch" | "router" | "firewall";
-  location: string;
-  ipAddress: string;
-  macAddress: string;
-  manufacturer: string;
-  model: string;
-  serialNumber: string;
-  installDate: string;
-  lastMaintenance: string;
-  status: "active" | "inactive" | "maintenance";
-}
-
-// Column definition
-interface Column {
-  id: string;
-  name: string;
-  visible: boolean;
-  order: number;
-}
+import {
+  APPLY_CHANGES,
+  CUSTOMIZE_COLUMNS,
+  MANAGE_SERVER_NODES,
+  NO_DATA_FOUND,
+  RESET,
+} from "@/consts";
 
 const initialColumns: Column[] = [
-  { id: "department", name: "Department", visible: true, order: 0 },
-  { id: "description", name: "Description", visible: true, order: 1 },
-  { id: "type", name: "Type", visible: true, order: 2 },
-  { id: "location", name: "Location", visible: true, order: 3 },
-  { id: "ipAddress", name: "IP Address", visible: true, order: 4 },
-  { id: "macAddress", name: "MAC Address", visible: false, order: 5 },
-  { id: "manufacturer", name: "Manufacturer", visible: false, order: 6 },
-  { id: "model", name: "Model", visible: true, order: 7 },
-  { id: "serialNumber", name: "Serial Number", visible: false, order: 8 },
-  { id: "installDate", name: "Install Date", visible: true, order: 9 },
-  {
-    id: "lastMaintenance",
-    name: "Last Maintenance",
-    visible: false,
-    order: 10,
-  },
-  { id: "status", name: "Status", visible: true, order: 11 },
+  { id: "branch", name: "Branch", visible: true, order: 0 },
+  { id: "department", name: "Department", visible: true, order: 1 },
+  { id: "port", name: "Port", visible: true, order: 2 },
+  { id: "server_name", name: "Server Name", visible: true, order: 3 },
 ];
 
-// Mock data generator
-const generateMockData = (): InfrastructureItem[] => {
-  const departments = [
-    "IT Operations",
-    "Human Resources",
-    "Finance",
-    "Marketing",
-    "Sales",
-    "Customer Support",
-    "Research & Development",
-    "Legal",
-    "Executive",
-  ];
+const ManagePage = () => {
+  const { data, loading } = useQuery(GET_SERVER_NODES);
 
-  const types: InfrastructureItem["type"][] = [
-    "server",
-    "switch",
-    "router",
-    "firewall",
-  ];
-  const locations = [
-    "HQ Floor 1",
-    "HQ Floor 2",
-    "HQ Floor 3",
-    "East Branch",
-    "West Branch",
-    "Data Center A",
-    "Data Center B",
-  ];
-  const manufacturers = [
-    "Cisco",
-    "Dell",
-    "HP",
-    "Juniper",
-    "Fortinet",
-    "Palo Alto Networks",
-  ];
-  const statuses: InfrastructureItem["status"][] = [
-    "active",
-    "inactive",
-    "maintenance",
-  ];
-
-  return Array.from({ length: 20 }, (_, i) => {
-    const type = types[Math.floor(Math.random() * types.length)];
-    const manufacturer =
-      manufacturers[Math.floor(Math.random() * manufacturers.length)];
-
-    return {
-      id: `INF-${(i + 1).toString().padStart(3, "0")}`,
-      department: departments[Math.floor(Math.random() * departments.length)],
-      description: `${type.charAt(0).toUpperCase() + type.slice(1)} for ${
-        departments[Math.floor(Math.random() * departments.length)]
-      }`,
-      type,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      ipAddress: `192.168.${Math.floor(Math.random() * 254) + 1}.${
-        Math.floor(Math.random() * 254) + 1
-      }`,
-      macAddress: Array.from({ length: 6 }, () =>
-        Math.floor(Math.random() * 256)
-          .toString(16)
-          .padStart(2, "0")
-      ).join(":"),
-      manufacturer,
-      model: `${manufacturer} ${type.charAt(0).toUpperCase()}${type.slice(
-        1
-      )}-${Math.floor(Math.random() * 1000)}`,
-      serialNumber: Array.from({ length: 10 }, () =>
-        Math.floor(Math.random() * 36)
-          .toString(36)
-          .toUpperCase()
-      ).join(""),
-      installDate: new Date(
-        Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 365 * 3)
-      ).toLocaleDateString(),
-      lastMaintenance: new Date(
-        Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 90)
-      ).toLocaleDateString(),
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-    };
-  });
-};
-
-export default function CustomTable() {
-  const [infraData, setInfraData] = useState<InfrastructureItem[]>([]);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [loading, setLoading] = useState(true);
+
   const [showColumnCustomization, setShowColumnCustomization] = useState(false);
+  const [infraData, setInfraData] = useState<InfrastructureItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
@@ -162,16 +53,12 @@ export default function CustomTable() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setInfraData(generateMockData());
-      setLoading(false);
-    };
-
-    loadData();
-  }, []);
+    if (data) {
+      if (data?.getServerNodes) {
+        setInfraData(data.getServerNodes);
+      }
+    }
+  }, [data]);
 
   // Handle column visibility toggle
   const toggleColumnVisibility = (columnId: string) => {
@@ -313,15 +200,7 @@ export default function CustomTable() {
             className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
           >
             <Settings size={16} />
-            <span>Customize Columns</span>
-          </button>
-
-          <button
-            onClick={() => toast.success("Table data exported successfully")}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-          >
-            <Download size={16} />
-            <span>Export</span>
+            <span>{CUSTOMIZE_COLUMNS}</span>
           </button>
         </div>
       </div>
@@ -330,19 +209,19 @@ export default function CustomTable() {
       {showColumnCustomization && (
         <div className="mb-6 glass-card rounded-xl p-4 animate-scale-in">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-medium">Customize Table Columns</h3>
+            <h3 className="font-medium">{MANAGE_SERVER_NODES}</h3>
             <div className="flex gap-2">
               <button
                 onClick={resetColumnConfig}
                 className="text-sm px-3 py-1 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                Reset
+                {RESET}
               </button>
               <button
                 onClick={saveColumnConfig}
                 className="text-sm px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
               >
-                Apply Changes
+                {APPLY_CHANGES}
               </button>
             </div>
           </div>
@@ -415,7 +294,7 @@ export default function CustomTable() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {sortedData.length === 0 ? (
                 Array.from({ length: 6 }).map((_, index) => (
                   <tr key={`skeleton-${index}`} className="animate-pulse">
                     {visibleColumns.map((column) => (
@@ -431,7 +310,7 @@ export default function CustomTable() {
                     colSpan={visibleColumns.length}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    No infrastructure items found matching your search.
+                    {NO_DATA_FOUND}
                   </td>
                 </tr>
               ) : (
@@ -442,28 +321,11 @@ export default function CustomTable() {
                   >
                     {visibleColumns.map((column) => (
                       <td key={column.id}>
-                        {column.id === "status" ? (
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                              {
-                                "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300":
-                                  item.status === "active",
-                                "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300":
-                                  item.status === "inactive",
-                                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300":
-                                  item.status === "maintenance",
-                              }
-                            )}
-                          >
-                            {item.status.charAt(0).toUpperCase() +
-                              item.status.slice(1)}
-                          </span>
-                        ) : (
+                        {
                           (item as InfrastructureItem)[
                             column.id as keyof InfrastructureItem
                           ]
-                        )}
+                        }
                       </td>
                     ))}
                   </tr>
@@ -475,4 +337,6 @@ export default function CustomTable() {
       </div>
     </PageLayout>
   );
-}
+};
+
+export default ManagePage;

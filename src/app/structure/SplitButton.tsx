@@ -1,6 +1,6 @@
-import React from "react";
-import { DrawItemType } from "./Toolbar";
 import { ChevronDownIcon } from "lucide-react";
+import React from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { DrawItemType } from "@/type";
 
 type SplitButtonProps = {
   onAdd: (item: DrawItemType) => void;

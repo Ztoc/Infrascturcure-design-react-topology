@@ -4,8 +4,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useInterval } from "react-use";
 import useSound from "use-sound";
 
-import { READ_DIAGRAM } from "@/app/structure/Diagram";
-
 const SECURITY_STORAGE_ITEM = "total-security";
 
 type Props = {
@@ -56,8 +54,10 @@ type IAuthContext = {
   alarmAreas: string[];
   authenticated: boolean;
   isAdmin: boolean;
+  user: string;
   setAuthenticated: (newState: boolean) => void;
   setAdmin: (newState: boolean) => void;
+  setUser: (newState: string) => void;
   signOut: () => void;
   confirmAlarm: (ipAddress: string) => void;
   setAlarmAreas: (newAreas: string[]) => void;
@@ -70,8 +70,10 @@ const initialValue = {
   serverLogs: [],
   alarmAreas: [],
   isAdmin: false,
+  user: "",
   setAuthenticated: () => {},
   setAdmin: () => {},
+  setUser: () => {},
   signOut: () => {},
   setSpeedLog: () => {},
   setServerLogs: () => {},
@@ -92,16 +94,17 @@ const AuthProvider = ({ children }: Props) => {
   });
   const router = useRouter();
   const location = usePathname();
-  const { data: sitesData } = useQuery(READ_DIAGRAM, {
-    variables: { org: "all" },
-    fetchPolicy: "no-cache",
-  });
+  // const { data: sitesData } = useQuery(READ_DIAGRAM, {
+  //   variables: { org: "all" },
+  //   fetchPolicy: "no-cache",
+  // });
 
   //Initializing an auth state with false value (unauthenticated)
   const [authenticated, setAuthenticated] = useState(
     initialValue.authenticated
   );
   const [isAdmin, setAdmin] = useState(initialValue.isAdmin);
+  const [user, setUser] = useState(initialValue.user);
   const [speedLog] = useState(initialValue.speedLog);
   const [serverLogs, setServerLogs] = useState<ServerLog[]>(
     initialValue.serverLogs
@@ -155,13 +158,14 @@ const AuthProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!authenticated) {
-      router.push("/sign-in");
+      router.push("/login");
     } else {
       localStorage.setItem(
         SECURITY_STORAGE_ITEM,
         JSON.stringify({
           loggedIn: true,
           isAdmin: isAdmin,
+          user: user,
         })
       );
     }
@@ -197,11 +201,12 @@ const AuthProvider = ({ children }: Props) => {
   useEffect(() => {
     const storageData = localStorage.getItem(SECURITY_STORAGE_ITEM);
     if (storageData) {
-      const { loggedIn, isAdmin } = JSON.parse(storageData);
+      const { loggedIn, isAdmin, user } = JSON.parse(storageData);
 
       if (loggedIn) {
         setAuthenticated(true);
         setAdmin(isAdmin);
+        setUser(user);
         router.push(location);
       } else {
         setAuthenticated(false);
@@ -209,11 +214,11 @@ const AuthProvider = ({ children }: Props) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (sitesData) {
-      setNodes([...sitesData.readDiagram.nodes]);
-    }
-  }, [sitesData]);
+  // useEffect(() => {
+  //   if (sitesData) {
+  //     setNodes([...sitesData.readDiagram.nodes]);
+  //   }
+  // }, [sitesData]);
 
   return (
     <AuthContext.Provider
@@ -224,6 +229,8 @@ const AuthProvider = ({ children }: Props) => {
         confirmAlarm,
         setAlarmAreas,
         isAdmin,
+        user,
+        setUser,
         authenticated,
         speedLog,
         serverLogs,

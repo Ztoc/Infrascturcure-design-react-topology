@@ -3,7 +3,7 @@
 import React, { FC, useEffect, useMemo, useState } from "react";
 
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   BaseNode,
   ColaLayout,
@@ -16,8 +16,6 @@ import {
   DragOperationType,
   Edge,
   EdgeAnimationSpeed,
-  EdgeModel,
-  EdgeStyle,
   EdgeTerminalType,
   Graph,
   GraphComponent,
@@ -49,29 +47,26 @@ import {
   withSelection,
   withTargetDrag,
 } from "@patternfly/react-topology";
-import _, { uniqueId } from "lodash";
+import _ from "lodash";
 import { useContext } from "react";
 // import useSound from "use-sound";
 
-import { AuthContext } from "@/context/AuthContext";
-import DiagramTitle from "../monitor/DiagramTitle";
+import DepartmentIcon from "@/components/icons/DepartmentIcon";
+import ServerIcon from "@/components/icons/ServerIcon";
+import BranchIcon from "@/components/icons/BranchIcon";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import DiagramSideBar from "./DiagramSideBar";
-import Toolbar from "./Toolbar";
-
+import Loading from "@/components/Loading";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import ServerIcon from "@/components/icons/ServerIcon";
-import DepartmentIcon from "@/components/icons/DepartmentIcon";
-import BranchIcon from "@/components/icons/BranchIcon";
-import { useRouter } from "next/navigation";
-import Loading from "@/components/Loading";
+
 import { READ_DIAGRAM, READ_IP, SAVE_DIAGRAM } from "@/query";
+import { AuthContext } from "@/context/AuthContext";
 import { DrawItemType, IconType, CustomNodeProps, DataEdgeProps } from "@/type";
 
 const getIconComponent = (icon: IconType) => {
@@ -84,19 +79,6 @@ const getIconComponent = (icon: IconType) => {
       return <DepartmentIcon />;
     default:
       return <BranchIcon />;
-  }
-};
-
-const getShape = (item: DrawItemType) => {
-  switch (item) {
-    case DrawItemType.ADD_SERVER:
-      return NodeShape.circle;
-    case DrawItemType.ADD_BRANCH:
-      return NodeShape.rhombus;
-    case DrawItemType.ADD_DEPARTMENT:
-      return NodeShape.rect;
-    default:
-      return NodeShape.hexagon;
   }
 };
 
@@ -115,7 +97,6 @@ const BadgeColors = [
   },
 ];
 
-const NODE_DIAMETER = 75;
 const DEFAULT_GRAPH = { id: "graph", type: "graph", layout: "Cola" };
 
 const CustomNode: FC<
@@ -134,7 +115,7 @@ const CustomNode: FC<
     if (data.isRoot || data.icon === "ServerIcon") {
       return;
     }
-    router.push(`/structure?org=${id}`);
+    router.push(`/monitor?org=${id}`);
   };
 
   return (
@@ -160,7 +141,7 @@ const CustomNode: FC<
   );
 };
 
-const CustomEdge: FC<DataEdgeProps> = ({ element, ...rest }) => {
+const CustomEdge = ({ element, ...rest }: DataEdgeProps) => {
   element.setEdgeAnimationSpeed(EdgeAnimationSpeed.fast);
 
   return (
@@ -336,288 +317,6 @@ const Diagram = ({ org }: { org: string }) => {
     return newController;
   }, []);
 
-  const isInNodes = (id: string) => {
-    return model.nodes ? model.nodes.some((item) => item.id === id) : false;
-  };
-
-  const getNewId = () => {
-    const timestamp = Date.now();
-    const randomSuffix = Math.floor(Math.random() * 1000);
-    return `${timestamp}-${randomSuffix}`;
-  };
-
-  const getIcon = (item: DrawItemType) => {
-    switch (item) {
-      case DrawItemType.ADD_BRANCH:
-        return { title: "Branch", icon: "BranchIcon" };
-      case DrawItemType.ADD_DEPARTMENT:
-        return { title: "Department", icon: "DepartmentIcon" };
-      case DrawItemType.ADD_SERVER:
-        return { title: "Server", icon: "ServerIcon" };
-      default:
-        return undefined;
-    }
-  };
-
-  const handleAdd = (item: DrawItemType) => {
-    const selectedItems = selectedIds.filter((item) => isInNodes(item));
-
-    switch (item) {
-      case DrawItemType.ADD_SERVER:
-      case DrawItemType.ADD_ROUTER:
-      case DrawItemType.ADD_SWITCH:
-      case DrawItemType.ADD_FIREWALL:
-      case DrawItemType.ADD_BRANCH:
-      case DrawItemType.ADD_DEPARTMENT:
-        const nodeId = getNewId();
-        const iconData = getIcon(item);
-        if (!iconData) return;
-
-        const { title, icon } = iconData;
-        const shortId = nodeId.split("-")[0].slice(-4);
-        const label = `${title}-${shortId}`;
-
-        const newNode: NodeModel = {
-          id: `node-${nodeId}`,
-          label,
-          shape: getShape(item),
-          children: [],
-          type: "node",
-          width: NODE_DIAMETER,
-          height: NODE_DIAMETER,
-          data: {
-            icon,
-            ipAddress: label,
-            isRoot: false,
-          },
-          x: 100,
-          y: 100,
-        };
-
-        setModel({
-          edges: model.edges || [],
-          graph: model.graph || DEFAULT_GRAPH,
-          nodes: [...(model.nodes || []), newNode],
-        });
-
-        break;
-      case DrawItemType.RENAME:
-        if (selectedIds.length === 0 || !model.nodes) return;
-
-        const selectedNode = model.nodes.find(
-          (item) => item.id === selectedIds[0]
-        );
-        if (!selectedNode || !selectedNode.data) return;
-
-        setOpen(true);
-        setCaption(selectedNode.data.ipAddress);
-        break;
-      case DrawItemType.CONNECT:
-      case DrawItemType.CONNECT_BY_ISOLATOR:
-        if (
-          selectedItems.length < 2 ||
-          !isInNodes(selectedItems[0]) ||
-          !isInNodes(selectedItems[1])
-        )
-          return;
-
-        const edgeId = `edge-${selectedItems[0]}-${selectedItems[1]}`;
-        const edgeId1 = `edge-${selectedItems[0]}-${selectedItems[1]}`;
-        const edgeId2 = `edge-${selectedItems[1]}-${selectedItems[0]}`;
-
-        const edge: EdgeModel = {
-          id: edgeId,
-          type: "edge",
-          source: selectedItems[0],
-          target: selectedItems[1],
-          edgeStyle:
-            item === DrawItemType.CONNECT
-              ? EdgeStyle.default
-              : EdgeStyle.dashed,
-          animationSpeed:
-            item === DrawItemType.CONNECT
-              ? EdgeAnimationSpeed.none
-              : EdgeAnimationSpeed.slow,
-          style: {
-            strokeWidth: "2px",
-          },
-        };
-
-        setModel({
-          ...model,
-          edges: [
-            ...(model.edges || []).filter(
-              (item) => item.id !== edgeId1 && item.id !== edgeId2
-            ),
-            edge,
-          ],
-          graph: DEFAULT_GRAPH,
-        });
-        break;
-
-      case DrawItemType.DISCONNECT:
-        if (selectedItems.length < 2 || !model.edges) return;
-
-        const disconnectEdgeId1 = `edge-${selectedItems[0]}-${selectedItems[1]}`;
-        const disconnectEdgeId2 = `edge-${selectedItems[1]}-${selectedItems[0]}`;
-
-        const indexToRemove = model.edges.findIndex(
-          (item) =>
-            item.id === disconnectEdgeId1 || item.id === disconnectEdgeId2
-        );
-
-        if (indexToRemove !== -1) {
-          const newEdges = [...model.edges];
-          newEdges.splice(indexToRemove, 1);
-          setModel({
-            ...model,
-            graph: DEFAULT_GRAPH,
-            edges: [...newEdges],
-          });
-        }
-
-        break;
-
-      case DrawItemType.DELETE:
-        if (!model.nodes || selectedItems.length === 0) return;
-
-        const newNodes = model.nodes
-          .map((item) => {
-            if (item.type === "node") {
-              return item;
-            } else if (item.type === "group" && item.children) {
-              const newChildren = item.children.filter(
-                (el) => !selectedItems.includes(el)
-              );
-
-              return { ...item, children: [...newChildren] };
-            }
-            return item;
-          })
-          .filter((item) => item && !selectedItems.includes(item.id));
-
-        const newEdges = (model.edges || []).filter(
-          (item) =>
-            !(
-              (item.source && selectedItems.includes(item.source)) ||
-              (item.target && selectedItems.includes(item.target))
-            )
-        );
-
-        setModel({
-          edges: newEdges,
-          graph: DEFAULT_GRAPH,
-          nodes: newNodes,
-        });
-        break;
-
-      case DrawItemType.GROUP:
-        if (selectedItems.length < 2) return;
-
-        const id = selectedItems.reduce(
-          (prev, cur, index) => (index > 0 ? prev + "-" + cur : cur),
-          selectedItems[0]
-        );
-        const group: NodeModel = {
-          id: id + "-" + uniqueId(),
-          children: [...selectedItems],
-          type: "group",
-          group: true,
-          label: id,
-          style: {
-            padding: 40,
-          },
-        };
-
-        const currentNodes = [...(model.nodes || [])];
-        currentNodes.push(group);
-
-        setModel({
-          ...model,
-          nodes: currentNodes.filter(
-            (item) => !(item.type === "group" && item.children?.length === 0)
-          ),
-        });
-        break;
-      case DrawItemType.SAVE_DIAGRAM:
-        if (!model.graph || !model.nodes || !model.edges) return;
-
-        saveDiagram({
-          variables: {
-            diagram: {
-              organization: org,
-              graph: {
-                id: model.graph.id,
-                layout: model.graph.layout,
-                type: model.graph.layout,
-              },
-              nodes: model.nodes.map((item) => {
-                const {
-                  id,
-                  label,
-                  shape,
-                  status,
-                  width,
-                  height,
-                  x,
-                  y,
-                  data,
-                  children,
-                  group,
-                  type,
-                  style,
-                } = item;
-
-                return {
-                  id,
-                  label,
-                  shape,
-                  status,
-                  width,
-                  height,
-                  x,
-                  y,
-                  data: {
-                    badge: data?.badge,
-                    icon:
-                      data?.icon?.displayName ||
-                      (typeof data?.icon === "string" ? data?.icon : ""),
-                    ipAddress: data?.ipAddress,
-                    isRoot: data?.isRoot || false,
-                  },
-                  children,
-                  group,
-                  type,
-                  style,
-                };
-              }),
-              edges: model.edges.map((item) => {
-                const { id, source, target, type, edgeStyle } = item;
-
-                return { id, source, target, type, edgeStyle };
-              }),
-            },
-          },
-        })
-          .then(() => {
-            toast.success("Diagram saved successfully", {
-              position: "top-right",
-              style: {
-                background: "green",
-                color: "white",
-              },
-            });
-            console.log("Diagram saved successfully");
-          })
-          .catch((error) => {
-            toast.error(`Failed to save diagram: ${error.message}`);
-          });
-        break;
-      default:
-        break;
-    }
-  };
-
   useEffect(() => {
     if (!_.isEmpty(model)) {
       controller.fromModel(model, true);
@@ -753,13 +452,6 @@ const Diagram = ({ org }: { org: string }) => {
     <TopologyView
       className="h-full"
       sideBar={isAdmin ? null : <ServerSideBar />}
-      contextToolbar={
-        isAdmin ? (
-          <Toolbar org={org} onAdd={handleAdd} count={selectedIds.length} />
-        ) : (
-          <DiagramTitle org={org} />
-        )
-      }
     >
       <VisualizationProvider controller={controller}>
         <Dialog open={open} onClose={handleClose}>

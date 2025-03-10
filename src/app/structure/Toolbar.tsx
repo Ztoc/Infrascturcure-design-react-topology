@@ -1,56 +1,45 @@
-import { BanIcon, TableIcon, CloseIcon } from "@patternfly/react-icons";
-import { EditIcon, NetworkIcon, TrashIcon } from "lucide-react";
+import { TableIcon, CloseIcon } from "@patternfly/react-icons";
+import { EditIcon, TrashIcon } from "lucide-react";
 import { SaveIcon } from "@patternfly/react-icons";
+import Image from "next/image";
 
-import { getDiagramTitle } from "./DiagramTitle";
-import { Button } from "@/components/ui/button";
-import SplitButton from "./SplitButton";
-import { Organization } from "./page";
-import BranchIcon from "@/components/icons/BranchIcon";
 import DepartmentIcon from "@/components/icons/DepartmentIcon";
 import ServerIcon from "@/components/icons/ServerIcon";
+import BranchIcon from "@/components/icons/BranchIcon";
+import { Button } from "@/components/ui/button";
+import Netline from "@/assets/netline.png";
+import SplitButton from "./SplitButton";
+import Fiber from "@/assets/fiber.png";
+import { DrawItemType } from "@/type";
 
-export enum DrawItemType {
-  ADD_BRANCH = "BRANCH",
-  ADD_DEPARTMENT = "DEPARTMENT",
-  ADD_ROUTER = "ROUTER",
-  ADD_SWITCH = "SWITCH",
-  ADD_FIREWALL = "FIREWALL",
-  ADD_SERVER = "SERVER",
-  CONNECT = "CONNECT",
-  CONNECT_BY_ISOLATOR = "CONNECT_BY_ISOLATOR",
-  DISCONNECT = "DISCONNECT",
-  GROUP = "GROUP",
-  DELETE = "DELETE",
-  RENAME = "RENAME",
-  SAVE_DIAGRAM = "SAVE",
-}
-
-export enum IconType {
-  BRANCH_ICON = "BranchIcon",
-  DEPARTMENT_ICON = "DepartmentIcon",
-  SERVER_ICON = "ServerIcon",
-  CLUSTER_ICON = "ClusterIcon",
-  ROUTER_ICON = "RouterIcon",
-  SWITCH_ICON = "SwitchIcon",
-  FIREWALL_ICON = "FirewallIcon",
-}
+import {
+  CHANGE_CONFIGURE,
+  DELETE,
+  DEPARTMENT,
+  DISCONNECT,
+  FIBER_OPTIC_CABLE,
+  GROUP,
+  SERVER,
+  BRANCH,
+  SAVE,
+  TWISTED_PAIR_CABLE,
+} from "@/consts";
 
 const optionsNodes = {
   title: "Add",
   items: [
     {
-      title: "Branch",
+      title: BRANCH,
       icon: <BranchIcon />,
       item: DrawItemType.ADD_BRANCH,
     },
     {
-      title: "Department",
+      title: DEPARTMENT,
       icon: <DepartmentIcon />,
       item: DrawItemType.ADD_DEPARTMENT,
     },
     {
-      title: "Server",
+      title: SERVER,
       icon: <ServerIcon />,
       item: DrawItemType.ADD_SERVER,
     },
@@ -61,17 +50,17 @@ const optionsConnect = {
   title: "Connection",
   items: [
     {
-      title: "Netline",
-      icon: <NetworkIcon className="mr-2" />,
+      title: TWISTED_PAIR_CABLE,
+      icon: <Image src={Netline} alt="Netline" width={60} height={60} />,
       item: DrawItemType.CONNECT,
     },
     {
-      title: "Blocker",
-      icon: <BanIcon className="mr-2" />,
+      title: FIBER_OPTIC_CABLE,
+      icon: <Image src={Fiber} alt="Fiber" width={60} height={60} />,
       item: DrawItemType.CONNECT_BY_ISOLATOR,
     },
     {
-      title: "Cancel",
+      title: DISCONNECT,
       icon: <CloseIcon className="mr-2" />,
       item: DrawItemType.DISCONNECT,
     },
@@ -79,22 +68,18 @@ const optionsConnect = {
 };
 
 type ToolbarProps = {
-  org: Organization;
+  org: string;
   onAdd: (item: DrawItemType) => void;
   count: number;
 };
 
-export default function Toolbar({ org, count, onAdd }: ToolbarProps) {
+const Toolbar = ({ org, count, onAdd }: ToolbarProps) => {
   const handleClick = (item: DrawItemType) => {
     onAdd(item);
   };
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <Button variant="secondary" className="font-medium">
-        {`${getDiagramTitle(org)} Structure`}
-      </Button>
-
-      <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2 items-center mt-4 w-full justify-center">
+      <div className="flex gap-2 px-4">
         <SplitButton options={optionsNodes} onAdd={onAdd} />
         <SplitButton options={optionsConnect} onAdd={onAdd} />
       </div>
@@ -104,7 +89,7 @@ export default function Toolbar({ org, count, onAdd }: ToolbarProps) {
         onClick={() => handleClick(DrawItemType.RENAME)}
       >
         <EditIcon className="mr-2 h-4 w-4" />
-        Change Address
+        {CHANGE_CONFIGURE}
       </Button>
 
       <Button
@@ -113,7 +98,7 @@ export default function Toolbar({ org, count, onAdd }: ToolbarProps) {
         disabled={count < 1}
       >
         <TrashIcon className="mr-2 h-4 w-4" />
-        Delete
+        {DELETE}
       </Button>
 
       <Button
@@ -122,7 +107,7 @@ export default function Toolbar({ org, count, onAdd }: ToolbarProps) {
         onClick={() => handleClick(DrawItemType.GROUP)}
       >
         <TableIcon className="mr-2" />
-        Group
+        {GROUP}
       </Button>
 
       <Button
@@ -130,8 +115,10 @@ export default function Toolbar({ org, count, onAdd }: ToolbarProps) {
         onClick={() => handleClick(DrawItemType.SAVE_DIAGRAM)}
       >
         <SaveIcon className="mr-2" />
-        Save
+        {SAVE}
       </Button>
     </div>
   );
-}
+};
+
+export default Toolbar;

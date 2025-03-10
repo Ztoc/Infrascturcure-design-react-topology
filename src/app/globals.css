@@ -86,7 +86,7 @@
 
 @layer base {
   * {
-    @apply border-gray-200;
+    @apply border-gray-200 dark:border-gray-800;
   }
 
   body {
@@ -96,12 +96,12 @@
   
   /* Custom scrollbar styles */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   ::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-transparent rounded-full;
   }
   
   ::-webkit-scrollbar-thumb {
@@ -110,11 +110,11 @@
 
   /* Glass morphism classes */
   .glass {
-    @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/60 border border-white/20 dark:border-gray-800/30;
+    @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/60 border border-white/20 dark:border-gray-800/30 shadow-sm;
   }
   
   .glass-card {
-    @apply glass shadow-md;
+    @apply glass shadow-md rounded-xl;
   }
   
   /* Animation classes */
@@ -139,13 +139,13 @@
 
 @layer components {
   .tab-button {
-    @apply relative px-4 py-2 text-sm font-medium transition-colors rounded-full;
-    @apply text-foreground/60 hover:text-foreground;
-    @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary;
+    @apply relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-full;
+    @apply text-foreground/60 hover:text-foreground hover:bg-secondary/50;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-1;
   }
   
   .tab-button.active {
-    @apply text-foreground bg-secondary;
+    @apply text-foreground bg-secondary font-semibold shadow-sm;
   }
   
   .table-wrapper {
@@ -157,7 +157,7 @@
   }
   
   .data-table thead {
-    @apply bg-muted/50;
+    @apply bg-muted/50 sticky top-0 z-10;
   }
   
   .data-table th {
@@ -165,7 +165,7 @@
   }
   
   .data-table tr {
-    @apply border-b border-border/50 last:border-0;
+    @apply border-b border-border/50 last:border-0 transition-colors;
   }
   
   .data-table td {
@@ -173,7 +173,7 @@
   }
   
   .status-badge {
-    @apply inline-flex items-center rounded-full px-2 py-1 text-xs font-medium;
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium transition-all;
   }
   
   .status-badge.online {
@@ -188,9 +188,30 @@
     @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
   }
   
-  /* Dropdown menu */
-
+  /* Form elements */
+  .form-input {
+    @apply w-full px-4 py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all;
+  }
   
+  /* Card styles */
+  .dashboard-card {
+    @apply glass-card p-6 transition-all hover:shadow-lg;
+  }
+  
+  /* Button styles */
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1;
+  }
+  
+  .btn-outline {
+    @apply px-4 py-2 bg-transparent border border-border rounded-lg font-medium hover:bg-secondary/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-1;
+  }
+  
+  /* Dropdown menu */
   .dropdown-menu {
     @apply hidden absolute z-10 mt-2 rounded-md shadow-lg glass;
     @apply group-hover:block;
@@ -198,8 +219,6 @@
 }
 
 /* Add full height styles for topology components */
-
-
 .pf-topology-view {
   display: flex;
   flex-direction: column;
@@ -268,4 +287,47 @@
   fill: rgba(30, 58, 138, 0.8) !important; 
   stroke: rgba(147, 197, 253, 0.4) !important; 
   stroke-width: 1px !important;
+}
+
+.pf-topology__edge__link {
+  stroke: rgb(30, 129, 175);
+  stroke-width: 2px !important;
+}
+.pf-topology__edge__link.pf-m-dashed {
+  stroke: rgb(197, 98, 32) !important;
+  stroke-width: 2px !important;
+}
+
+/* Improved animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
 }

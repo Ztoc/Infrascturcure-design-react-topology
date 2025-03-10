@@ -13,6 +13,13 @@ import {
 
 import PageLayout from "@/components/PageLayout";
 import { cn } from "@/lib/utils";
+import {
+  APPLY_CHANGES,
+  CUSTOMIZE_COLUMNS,
+  NO_DATA_FOUND,
+  RESET,
+} from "@/consts";
+import { Column } from "@/type";
 
 interface InfrastructureItem {
   id: string;
@@ -28,14 +35,6 @@ interface InfrastructureItem {
   installDate: string;
   lastMaintenance: string;
   status: "active" | "inactive" | "maintenance";
-}
-
-// Column definition
-interface Column {
-  id: string;
-  name: string;
-  visible: boolean;
-  order: number;
 }
 
 const initialColumns: Column[] = [
@@ -142,7 +141,7 @@ const generateMockData = (): InfrastructureItem[] => {
   });
 };
 
-export default function CustomTable() {
+const DetailPage = () => {
   const [infraData, setInfraData] = useState<InfrastructureItem[]>([]);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [loading, setLoading] = useState(true);
@@ -292,7 +291,7 @@ export default function CustomTable() {
 
   return (
     <PageLayout
-      title="Customizable Infrastructure Table"
+      title="Detail page"
       subtitle="View and configure your infrastructure data with customizable columns"
     >
       <div className="mb-6 flex flex-col sm:flex-row justify-between gap-4">
@@ -312,7 +311,7 @@ export default function CustomTable() {
             className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
           >
             <Settings size={16} />
-            <span>Customize Columns</span>
+            <span>{CUSTOMIZE_COLUMNS}</span>
           </button>
         </div>
       </div>
@@ -321,24 +320,24 @@ export default function CustomTable() {
       {showColumnCustomization && (
         <div className="mb-6 glass-card rounded-xl p-4 animate-scale-in">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-medium">Customize Table Columns</h3>
+            <h3 className="font-medium">{CUSTOMIZE_COLUMNS}</h3>
             <div className="flex gap-2">
               <button
                 onClick={resetColumnConfig}
                 className="text-sm px-3 py-1 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                Reset
+                {RESET}
               </button>
               <button
                 onClick={saveColumnConfig}
                 className="text-sm px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
               >
-                Apply Changes
+                {APPLY_CHANGES}
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {columns
               .sort((a, b) => a.order - b.order)
               .map((column) => (
@@ -422,7 +421,7 @@ export default function CustomTable() {
                     colSpan={visibleColumns.length}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    No infrastructure items found matching your search.
+                    {NO_DATA_FOUND}
                   </td>
                 </tr>
               ) : (
@@ -466,4 +465,6 @@ export default function CustomTable() {
       </div>
     </PageLayout>
   );
-}
+};
+
+export default DetailPage;

@@ -16,6 +16,8 @@ import {
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "@/components/Header";
 import "./globals.css";
+import { useEffect } from "react";
+import { Toaster } from "sonner";
 
 const wsLink = new GraphQLWsLink(
   createClient({
@@ -45,21 +47,31 @@ const client = new ApolloClient({
   link: from([removeTypenameLink, splitLink]),
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+
+    if (!storedTheme || storedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    } else if (storedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   return (
     <html lang="en">
-      <body>
+      <body className="h-screen overflow-hidden">
         <ApolloProvider client={client}>
           <AuthProvider>
             <Header />
             {children}
+            <Toaster />
           </AuthProvider>
         </ApolloProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
