@@ -12,6 +12,15 @@ export const GET_SERVER_NODES = gql`
   }
 `;
 
+export const GET_BRANCHES = gql`
+  query GetBranches {
+    getBranches {
+      branch_name
+      branch_id
+    }
+  }
+`;
+
 export const GET_DIAGRAM_TITLE = gql`
   query getDiagramTitle($org: String) {
     getDiagramTitle(org: $org)

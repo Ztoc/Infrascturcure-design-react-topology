@@ -11,6 +11,16 @@ export type Tab = {
   name: string;
   path: string;
   icon: React.ReactNode;
+  isDropdown?: boolean;
+  dropdownItems?: {
+    name: string;
+    path: string;
+  }[];
+};
+
+export type Branch = {
+  branch_name: string;
+  branch_id: string;
 };
 
 export enum DrawItemType {
