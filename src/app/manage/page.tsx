@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { toast } from "sonner";
 import {
   Settings,
@@ -15,7 +15,7 @@ import {
 import PageLayout from "@/components/PageLayout";
 
 import { InfrastructureItem, Column } from "@/type";
-import { GET_SERVER_NODES } from "../../query";
+import { GET_COLUMN_SETTING, GET_SERVER_NODES, SAVE_COLUMN_SETTING } from "../../query";
 import { cn } from "@/lib/utils";
 import {
   APPLY_CHANGES,
@@ -24,22 +24,40 @@ import {
   NO_DATA_FOUND,
   RESET,
 } from "@/consts";
+import Loading from "@/components/Loading";
 
 const initialColumns: Column[] = [
-  { id: "branch", name: "Branch", visible: true, order: 0 },
-  { id: "department", name: "Department", visible: true, order: 1 },
-  { id: "port", name: "Port", visible: true, order: 2 },
-  { id: "server_name", name: "Server Name", visible: true, order: 3 },
+  { id: "Branch", name: "Branch", visible: true, order: 1 },
+  { id: "Department", name: "Department", visible: true, order: 2 },
+  { id: "Port", name: "Port", visible: true, order: 3 },
+  { id: "IP Address", name: "IP Address", visible: true, order: 4 },
 ];
 
 const ManagePage = () => {
   const { data, loading } = useQuery(GET_SERVER_NODES);
+
+  console.log(data)
 
   const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   const [showColumnCustomization, setShowColumnCustomization] = useState(false);
   const [infraData, setInfraData] = useState<InfrastructureItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [saveColumnSetting] = useMutation(SAVE_COLUMN_SETTING);
+
+  const { data: columnSetting } = useQuery(
+    GET_COLUMN_SETTING,
+    {
+      variables: { name: "server" },
+    }
+  );
+
+  useEffect(() => {
+    if (columnSetting) {
+      setColumns(columnSetting.getColumnSetting);
+    }
+  }, [columnSetting]);
+
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
     direction: "ascending" | "descending";
@@ -163,7 +181,21 @@ const ManagePage = () => {
   // Save column configuration
   const saveColumnConfig = () => {
     setShowColumnCustomization(false);
-    toast.success("Table configuration saved");
+
+    saveColumnSetting({
+      variables: {
+        columnConfig: {
+          name: "server",
+          columnSetting: columns,
+        },
+      },
+    })
+      .then(() => {
+        toast.success("Table configuration saved");
+      })
+      .catch((error: any) => {
+        toast.error("Failed to save table configuration");
+      });
     // In a real app, this would save to a backend or local storage
   };
 
@@ -227,7 +259,7 @@ const ManagePage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            {columns
+            {[...columns]
               .sort((a, b) => a.order - b.order)
               .map((column) => (
                 <div
@@ -266,11 +298,12 @@ const ManagePage = () => {
         </div>
       )}
 
-      <div className="glass-card rounded-xl overflow-hidden">
+      {!loading? <div className="glass-card rounded-xl overflow-hidden">
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
-              <tr>
+              <tr className="bg-muted/50 dark:bg-muted/20">
+                <th>No</th>
                 {visibleColumns.map((column) => (
                   <th
                     key={column.id}
@@ -297,6 +330,9 @@ const ManagePage = () => {
               {sortedData.length === 0 ? (
                 Array.from({ length: 6 }).map((_, index) => (
                   <tr key={`skeleton-${index}`} className="animate-pulse">
+                    <td>
+                      <div className="h-5 bg-muted rounded w-full max-w-[120px]"></div>
+                    </td>
                     {visibleColumns.map((column) => (
                       <td key={column.id}>
                         <div className="h-5 bg-muted rounded w-full max-w-[120px]"></div>
@@ -307,23 +343,24 @@ const ManagePage = () => {
               ) : sortedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={visibleColumns.length}
+                    colSpan={visibleColumns.length + 1}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {NO_DATA_FOUND}
                   </td>
                 </tr>
               ) : (
-                sortedData.map((item) => (
+                sortedData.map((item, index) => (
                   <tr
-                    key={item.id}
-                    className="hover:bg-muted/20 transition-colors"
+                    key={item.Department}
+                    className="hover:bg-muted/20 transition-colors odd:bg-background even:bg-muted/50"
                   >
+                    <td>{index + 1}</td>
                     {visibleColumns.map((column) => (
                       <td key={column.id}>
                         {
                           (item as InfrastructureItem)[
-                            column.id as keyof InfrastructureItem
+                            column.id.replaceAll(" ","") as keyof InfrastructureItem
                           ]
                         }
                       </td>
@@ -334,7 +371,7 @@ const ManagePage = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </div>:<Loading />}
     </PageLayout>
   );
 };

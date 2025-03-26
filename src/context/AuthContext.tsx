@@ -1,10 +1,8 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { useQuery } from "@apollo/client";
 import { useRouter, usePathname } from "next/navigation";
-import { useInterval } from "react-use";
 import useSound from "use-sound";
 
-const SECURITY_STORAGE_ITEM = "total-security";
+export const SECURITY_STORAGE_ITEM = "total-security";
 
 type Props = {
   children?: ReactNode;
@@ -89,9 +87,9 @@ const AuthContext = createContext<IAuthContext>(initialValue);
 const AuthProvider = ({ children }: Props) => {
   // const [getIPTitle] = useLazyQuery(READ_IP);
 
-  const [play, { stop }] = useSound("assets/alarm.wav", {
-    soundEnabled: true,
-  });
+  // const [play, { stop }] = useSound("assets/alarm.wav", {
+  //   soundEnabled: true,
+  // });
   const router = useRouter();
   const location = usePathname();
   // const { data: sitesData } = useQuery(READ_DIAGRAM, {
@@ -134,8 +132,6 @@ const AuthProvider = ({ children }: Props) => {
         };
       }
 
-      console.log("confirm", ipAddress);
-
       setServerLogs([...updatedServerLogs]);
     }
   };
@@ -171,32 +167,32 @@ const AuthProvider = ({ children }: Props) => {
     }
   }, [authenticated]);
 
-  useEffect(() => {
-    const alarmCount = speedLog.alarms.filter(
-      (router) => router.alarmType === "0"
-    ).length;
-    console.log(alarmCount);
+  // useEffect(() => {
+  //   const alarmCount = speedLog.alarms.filter(
+  //     (router) => router.alarmType === "0"
+  //   ).length;
+  //   console.log(alarmCount);
 
-    if (alarmCount === 3) {
-      stop();
-    } else if (alarmCount > 0) {
-      stop();
-      play();
-    }
-  }, [JSON.stringify(speedLog.alarms)]);
+  //   if (alarmCount === 3) {
+  //     stop();
+  //   } else if (alarmCount > 0) {
+  //     stop();
+  //     play();
+  //   }
+  // }, [JSON.stringify(speedLog.alarms)]);
 
-  useInterval(() => {
-    const alarmCount = speedLog.alarms.filter(
-      (router) => router.alarmType === "0"
-    ).length;
+  // useInterval(() => {
+  //   const alarmCount = speedLog.alarms.filter(
+  //     (router) => router.alarmType === "0"
+  //   ).length;
 
-    if (alarmCount === 3) {
-      stop();
-    } else if (alarmCount > 0) {
-      stop();
-      play();
-    }
-  }, 10000);
+  //   if (alarmCount === 3) {
+  //     stop();
+  //   } else if (alarmCount > 0) {
+  //     stop();
+  //     play();
+  //   }
+  // }, 10000);
 
   useEffect(() => {
     const storageData = localStorage.getItem(SECURITY_STORAGE_ITEM);

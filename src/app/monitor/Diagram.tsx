@@ -2,7 +2,7 @@
 
 import React, { FC, useEffect, useMemo, useState } from "react";
 
-import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import {
   BaseNode,
@@ -49,7 +49,7 @@ import {
 } from "@patternfly/react-topology";
 import _ from "lodash";
 import { useContext } from "react";
-// import useSound from "use-sound";
+import useSound from "use-sound";
 
 import DepartmentIcon from "@/components/icons/DepartmentIcon";
 import ServerIcon from "@/components/icons/ServerIcon";
@@ -65,9 +65,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { READ_DIAGRAM, READ_IP, SAVE_DIAGRAM } from "@/query";
+import { READ_DIAGRAM, READ_IP } from "@/query";
 import { AuthContext } from "@/context/AuthContext";
-import { DrawItemType, IconType, CustomNodeProps, DataEdgeProps } from "@/type";
+import {  IconType, CustomNodeProps, DataEdgeProps } from "@/type";
 
 const getIconComponent = (icon: IconType) => {
   switch (icon) {
@@ -106,17 +106,21 @@ const CustomNode: FC<
 
   const router = useRouter();
 
+ 
   const badgeColors =
     BadgeColors.find((badgeColor) => badgeColor.name === data.badge) ||
     BadgeColors[0];
 
   const handleDoubleClick = (id: string) => {
-    console.log("data", data);
-    if (data.isRoot || data.icon === "ServerIcon") {
+    if (data.isRoot || data.icon === "ServerIcon" || data.icon === "DepartmentIcon") {
       return;
     }
     router.push(`/monitor?org=${id}`);
   };
+
+  const nodeStatus = element.getNodeStatus().toString();
+
+  const status = nodeStatus === "Critical"? NodeStatus.danger : nodeStatus==="Danger" ? NodeStatus.warning: NodeStatus.default; 
 
   return (
     <DefaultNode
@@ -128,6 +132,7 @@ const CustomNode: FC<
       showStatusBackground
       onSelect={onSelect}
       selected={selected}
+      nodeStatus={status}
       {...rest}
     >
       <g transform={`translate(18, 18)`}>{getIconComponent(data.icon)}</g>
@@ -216,9 +221,9 @@ const customComponentFactory: ComponentFactory = (
 };
 
 const Diagram = ({ org }: { org: string }) => {
-  // const [play, { stop }] = useSound("assets/alarm.wav", {
-  //   soundEnabled: true,
-  // });
+  const [play,  { stop }] = useSound("/assets/alarm.wav", {
+    soundEnabled: true,
+  });
 
   const { isAdmin, serverLogs, confirmAlarm } = useContext(AuthContext);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -227,6 +232,8 @@ const Diagram = ({ org }: { org: string }) => {
     nodes: [],
     edges: [],
   });
+
+
 
   const [open, setOpen] = useState(false);
   // const handleOpen = () => setOpen(true);
@@ -238,12 +245,11 @@ const Diagram = ({ org }: { org: string }) => {
     loading,
     data: diagram,
   } = useQuery(READ_DIAGRAM, {
-    variables: { org: org },
+    variables: { org: org, status: true },
     fetchPolicy: "network-only",
   });
 
   const [getIPTitle] = useLazyQuery(READ_IP);
-  const [saveDiagram] = useMutation(SAVE_DIAGRAM);
 
   const updateCaption = async (caption: string) => {
     if (!model.nodes) return;
@@ -262,14 +268,11 @@ const Diagram = ({ org }: { org: string }) => {
     setCaption(caption);
   };
 
-  const dragFunc = (
-    dragModel: BaseNode,
-    dragEvent: DragEvent,
-    operation: DragOperationType
-  ) => {
-    console.log("dragFunc", dragModel, dragEvent, operation);
-    setModel(controller.toModel());
-  };
+  useEffect(()=>{
+  setTimeout(() => {
+    play();
+  }, 400);
+  },[])
 
   const getNode = (nodeId: string) => {
     if (!model.nodes) return null;
@@ -310,7 +313,7 @@ const Diagram = ({ org }: { org: string }) => {
     newController.registerComponentFactory(customComponentFactory);
 
     newController.addEventListener(SELECTION_EVENT, setSelectedIds);
-    newController.addEventListener(DRAG_NODE_END_EVENT, dragFunc);
+
 
     newController.fromModel(model, true);
 
@@ -454,7 +457,7 @@ const Diagram = ({ org }: { org: string }) => {
       sideBar={isAdmin ? null : <ServerSideBar />}
     >
       <VisualizationProvider controller={controller}>
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Change Address</DialogTitle>

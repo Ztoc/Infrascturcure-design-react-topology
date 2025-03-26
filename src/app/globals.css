@@ -298,6 +298,22 @@
   stroke-width: 2px !important;
 }
 
+.pf-topology__node__background.pf-m-danger {
+  filter: 
+    drop-shadow(0 0 2px rgba(239, 68, 68, 0.9)) /* Red glow */
+    drop-shadow(0 0 4px rgba(255, 3, 3, 0.7)) /* Soft outer spread */
+    drop-shadow(0 0 8px rgba(239, 68, 68, 0.3)); /* Wider blur */
+}
+
+.pf-topology__node__background.pf-m-warning {
+  filter: 
+    drop-shadow(0 0 2px rgba(230, 113, 5, 0.9)) /* Red glow */
+    drop-shadow(0 0 4px rgba(230, 113, 5, 0.7)) /* Soft outer spread */
+    drop-shadow(0 0 8px rgba(230, 113, 5, 0.3)); /* Wider blur */
+}
+
+
+
 /* Improved animations */
 @keyframes float {
   0% { transform: translateY(0px); }

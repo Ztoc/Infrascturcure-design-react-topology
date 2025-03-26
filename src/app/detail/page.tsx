@@ -20,131 +20,96 @@ import {
   RESET,
 } from "@/consts";
 import { Column } from "@/type";
+import { useMutation, useQuery } from "@apollo/client";
+import { GET_COLUMN_SETTING, GET_LOGS, SAVE_COLUMN_SETTING } from "@/query";
+import Loading from "@/components/Loading";
 
-interface InfrastructureItem {
-  id: string;
-  department: string;
-  description: string;
-  type: "server" | "switch" | "router" | "firewall";
-  location: string;
-  ipAddress: string;
-  macAddress: string;
-  manufacturer: string;
-  model: string;
-  serialNumber: string;
-  installDate: string;
-  lastMaintenance: string;
-  status: "active" | "inactive" | "maintenance";
+interface ILogItem {
+  id: number;
+  AverageByte: number;
+  Device: string;
+  IPv4_Dst: string;
+  MACDst: string;
+  MACProto: string;
+  MACSrc: string;
+  TCP_ACK: number;
+  TCP_FIN: number;
+  TCP_PSH: number;
+  TCP_Port_Dst: number;
+  TCP_Port_Src: number;
+  TCP_RST: number;
+  TCP_SACK: number;
+  TCP_SYN: number;
+  TS: string;
+  TotalByte: number;
+  TotalPkt: number;
+  capturename: string;
+  hash: string;
+  uid: string;
+  IndexPattern: string;
+  AttackType: string;
+  AttackLevel: string;
+  Agency: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const initialColumns: Column[] = [
-  { id: "department", name: "Department", visible: true, order: 0 },
-  { id: "description", name: "Description", visible: true, order: 1 },
-  { id: "type", name: "Type", visible: true, order: 2 },
-  { id: "location", name: "Location", visible: true, order: 3 },
-  { id: "ipAddress", name: "IP Address", visible: true, order: 4 },
-  { id: "macAddress", name: "MAC Address", visible: false, order: 5 },
-  { id: "manufacturer", name: "Manufacturer", visible: false, order: 6 },
-  { id: "model", name: "Model", visible: true, order: 7 },
-  { id: "serialNumber", name: "Serial Number", visible: false, order: 8 },
-  { id: "installDate", name: "Install Date", visible: true, order: 9 },
-  {
-    id: "lastMaintenance",
-    name: "Last Maintenance",
-    visible: false,
-    order: 10,
-  },
-  { id: "status", name: "Status", visible: true, order: 11 },
+  { id: "AverageByte", name: "AverageByte", visible: true, order: 1 },
+  { id: "Device", name: "Device", visible: true, order: 2 },
+  { id: "IPv4_Dst", name: "IPv4_Dst", visible: true, order: 3 },
+  { id: "MACDst", name: "MACDst", visible: true, order: 4 },
+  { id: "MACProto", name: "MACProto", visible: true, order: 5 },
+  { id: "MACSrc", name: "MACSrc", visible: true, order: 6 },
+  { id: "TCP_ACK", name: "TCP_ACK", visible: false, order: 7 },
+  { id: "TCP_FIN", name: "TCP_FIN", visible: false, order: 8 },
+  { id: "TCP_PSH", name: "TCP_PSH", visible: false, order: 9 },
+  { id: "TCP_Port_Dst", name: "TCP_Port_Dst", visible: true, order: 10 },
+  { id: "TCP_Port_Src", name: "TCP_Port_Src", visible: true, order: 11 },
+  { id: "TCP_RST", name: "TCP_RST", visible: false, order: 12 },
+  { id: "TCP_SACK", name: "TCP_SACK", visible: false, order: 13 },
+  { id: "TCP_SYN", name: "TCP_SYN", visible: false, order: 14 },
+  { id: "TS", name: "TS", visible: true, order: 15 },
+  { id: "TotalByte", name: "TotalByte", visible: true, order: 16 },
+  { id: "TotalPkt", name: "TotalPkt", visible: true, order: 17 },
+  { id: "capturename", name: "capturename", visible: true, order: 18 },
+  { id: "hash", name: "hash", visible: false, order: 19 },
+  { id: "uid", name: "uid", visible: true, order: 20 },
+  { id: "IndexPattern", name: "IndexPattern", visible: true, order: 21 },
+  { id: "AttackType", name: "AttackType", visible: true, order: 22 },
+  { id: "AttackLevel", name: "AttackLevel", visible: true, order: 23 },
+  { id: "Agency", name: "Agency", visible: true, order: 24 },
+  { id: "createdAt", name: "createdAt", visible: true, order: 25 },
 ];
 
-// Mock data generator
-const generateMockData = (): InfrastructureItem[] => {
-  const departments = [
-    "IT Operations",
-    "Human Resources",
-    "Finance",
-    "Marketing",
-    "Sales",
-    "Customer Support",
-    "Research & Development",
-    "Legal",
-    "Executive",
-  ];
-
-  const types: InfrastructureItem["type"][] = [
-    "server",
-    "switch",
-    "router",
-    "firewall",
-  ];
-  const locations = [
-    "HQ Floor 1",
-    "HQ Floor 2",
-    "HQ Floor 3",
-    "East Branch",
-    "West Branch",
-    "Data Center A",
-    "Data Center B",
-  ];
-  const manufacturers = [
-    "Cisco",
-    "Dell",
-    "HP",
-    "Juniper",
-    "Fortinet",
-    "Palo Alto Networks",
-  ];
-  const statuses: InfrastructureItem["status"][] = [
-    "active",
-    "inactive",
-    "maintenance",
-  ];
-
-  return Array.from({ length: 20 }, (_, i) => {
-    const type = types[Math.floor(Math.random() * types.length)];
-    const manufacturer =
-      manufacturers[Math.floor(Math.random() * manufacturers.length)];
-
-    return {
-      id: `INF-${(i + 1).toString().padStart(3, "0")}`,
-      department: departments[Math.floor(Math.random() * departments.length)],
-      description: `${type.charAt(0).toUpperCase() + type.slice(1)} for ${
-        departments[Math.floor(Math.random() * departments.length)]
-      }`,
-      type,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      ipAddress: `192.168.${Math.floor(Math.random() * 254) + 1}.${
-        Math.floor(Math.random() * 254) + 1
-      }`,
-      macAddress: Array.from({ length: 6 }, () =>
-        Math.floor(Math.random() * 256)
-          .toString(16)
-          .padStart(2, "0")
-      ).join(":"),
-      manufacturer,
-      model: `${manufacturer} ${type.charAt(0).toUpperCase()}${type.slice(
-        1
-      )}-${Math.floor(Math.random() * 1000)}`,
-      serialNumber: Array.from({ length: 10 }, () =>
-        Math.floor(Math.random() * 36)
-          .toString(36)
-          .toUpperCase()
-      ).join(""),
-      installDate: new Date(
-        Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 365 * 3)
-      ).toLocaleDateString(),
-      lastMaintenance: new Date(
-        Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 90)
-      ).toLocaleDateString(),
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-    };
-  });
-};
-
 const DetailPage = () => {
-  const [infraData, setInfraData] = useState<InfrastructureItem[]>([]);
+  const [infraData, setInfraData] = useState<ILogItem[]>([]);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [loading, setLoading] = useState(true);
+  const [saveColumnSetting] = useMutation(SAVE_COLUMN_SETTING);
+
+  const { data: columnSetting, loading: columnLoading } = useQuery(
+    GET_COLUMN_SETTING,
+    {
+      variables: { name: "log" },
+    }
+  );
+
+  const { data: logData, loading } = useQuery(GET_LOGS);
+
+  console.log(logData);
+
+  useEffect(() => {
+    if (columnSetting) {
+      setColumns(columnSetting.getColumnSetting);
+    }
+  }, [columnSetting]);
+
+  useEffect(() => {
+    if (logData?.getLogs?.length > 0) {
+      setInfraData(logData.getLogs);
+    }
+  }, [loading]);
+
   const [showColumnCustomization, setShowColumnCustomization] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
@@ -158,18 +123,6 @@ const DetailPage = () => {
   // Dragged column state
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setInfraData(generateMockData());
-      setLoading(false);
-    };
-
-    loadData();
-  }, []);
 
   // Handle column visibility toggle
   const toggleColumnVisibility = (columnId: string) => {
@@ -243,22 +196,20 @@ const DetailPage = () => {
   );
 
   // Sort data
-  const sortedData = [...filteredData].sort(
-    (a: InfrastructureItem, b: InfrastructureItem) => {
-      if (!sortConfig.key) return 0;
+  const sortedData = [...filteredData].sort((a: ILogItem, b: ILogItem) => {
+    if (!sortConfig.key) return 0;
 
-      const aValue = a[sortConfig.key as keyof InfrastructureItem];
-      const bValue = b[sortConfig.key as keyof InfrastructureItem];
+    const aValue = a[sortConfig.key as keyof ILogItem];
+    const bValue = b[sortConfig.key as keyof ILogItem];
 
-      if (aValue < bValue) {
-        return sortConfig.direction === "ascending" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === "ascending" ? 1 : -1;
-      }
-      return 0;
+    if (aValue < bValue) {
+      return sortConfig.direction === "ascending" ? -1 : 1;
     }
-  );
+    if (aValue > bValue) {
+      return sortConfig.direction === "ascending" ? 1 : -1;
+    }
+    return 0;
+  });
 
   // Handle column sort
   const handleSort = (columnId: string) => {
@@ -274,13 +225,26 @@ const DetailPage = () => {
   // Save column configuration
   const saveColumnConfig = () => {
     setShowColumnCustomization(false);
-    toast.success("Table configuration saved");
-    // In a real app, this would save to a backend or local storage
+
+    saveColumnSetting({
+      variables: {
+        columnConfig: {
+          name: "log",
+          columnSetting: columns,
+        },
+      },
+    })
+      .then(() => {
+        toast.success("Table configuration saved");
+      })
+      .catch((error) => {
+        toast.error("Failed to save table configuration");
+      });
   };
 
   // Reset column configuration
   const resetColumnConfig = () => {
-    setColumns(initialColumns);
+    setColumns(columnSetting.getColumnSetting);
     toast.success("Table configuration reset to default");
   };
 
@@ -338,7 +302,7 @@ const DetailPage = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {columns
+            {[...columns]
               .sort((a, b) => a.order - b.order)
               .map((column) => (
                 <div
@@ -377,92 +341,102 @@ const DetailPage = () => {
         </div>
       )}
 
-      <div className="glass-card rounded-xl overflow-hidden">
-        <div className="table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                {visibleColumns.map((column) => (
-                  <th
-                    key={column.id}
-                    className="relative cursor-pointer select-none"
-                    onClick={() => handleSort(column.id)}
-                  >
-                    <div className="flex items-center">
-                      <span>{column.name}</span>
-                      {sortConfig.key === column.id && (
-                        <span className="ml-1">
-                          {sortConfig.direction === "ascending" ? (
-                            <ChevronUp size={14} />
-                          ) : (
-                            <ChevronDown size={14} />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 6 }).map((_, index) => (
-                  <tr key={`skeleton-${index}`} className="animate-pulse">
-                    {visibleColumns.map((column) => (
-                      <td key={column.id}>
-                        <div className="h-5 bg-muted rounded w-full max-w-[120px]"></div>
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : sortedData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={visibleColumns.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {NO_DATA_FOUND}
-                  </td>
-                </tr>
-              ) : (
-                sortedData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-muted/20 transition-colors"
-                  >
-                    {visibleColumns.map((column) => (
-                      <td key={column.id}>
-                        {column.id === "status" ? (
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                              {
-                                "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300":
-                                  item.status === "active",
-                                "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300":
-                                  item.status === "inactive",
-                                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300":
-                                  item.status === "maintenance",
-                              }
+      {!columnLoading ? (
+        <div className="glass-card rounded-xl overflow-hidden">
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr className="bg-muted/50 dark:bg-muted/20">
+                   <th>No</th>
+                  {visibleColumns.map((column) => (
+                    <th
+                      key={column.id}
+                      className="relative cursor-pointer select-none"
+                      onClick={() => handleSort(column.id)}
+                    >
+                      <div className="flex items-center">
+                        <span>{column.name}</span>
+                        {sortConfig.key === column.id && (
+                          <span className="ml-1">
+                            {sortConfig.direction === "ascending" ? (
+                              <ChevronUp size={14} />
+                            ) : (
+                              <ChevronDown size={14} />
                             )}
-                          >
-                            {item.status.charAt(0).toUpperCase() +
-                              item.status.slice(1)}
                           </span>
-                        ) : (
-                          (item as InfrastructureItem)[
-                            column.id as keyof InfrastructureItem
-                          ]
                         )}
-                      </td>
-                    ))}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <tr key={`skeleton-${index}`} className="animate-pulse">
+                      {visibleColumns.map((column) => (
+                        <td key={column.id}>
+                          <div className="h-5 bg-muted rounded w-full max-w-[120px]"></div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : sortedData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={visibleColumns.length}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {NO_DATA_FOUND}
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  sortedData.map((item,index) => (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-muted/20 transition-colors odd:bg-background even:bg-muted/50"
+                    >
+                      <td>
+                        {index+1}
+                      </td>
+                      {visibleColumns.map((column) => (
+                        <td key={column.id}>
+                          {column.id === "AttackLevel" ? (
+                           <span
+                           className={cn(
+                             "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+                             {
+                               "bg-amber-500 text-amber-100 dark:bg-amber-600 dark:text-amber-300": item.AttackLevel === "Warning", 
+                               "bg-red-500 text-white dark:bg-red-600 dark:text-red-300": item.AttackLevel === "Critical", 
+                               "bg-orange-500 text-white dark:bg-orange-600 dark:text-orange-300": item.AttackLevel === "Danger",
+                               "bg-gray-500 text-white dark:bg-gray-600 dark:text-gray-300": item.AttackLevel === "Normal", 
+                             }
+                           )}
+                         >
+                           {item.AttackLevel}
+                         </span>
+                         
+                          ) : column.id === "createdAt" ? (
+                            <span>
+                              {new Date(
+                                Number(item.createdAt)
+                              ).toLocaleString()}{" "}
+                            </span>
+                          ) : (
+                            item[column.id as keyof ILogItem]
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <Loading />
+      )}
     </PageLayout>
   );
 };

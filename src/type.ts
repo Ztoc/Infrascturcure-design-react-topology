@@ -50,11 +50,10 @@ export enum IconType {
 }
 
 export interface InfrastructureItem {
-  id: string;
-  branch: string;
-  department: string;
-  port: string;
-  server_name: string;
+  Branch: string;
+  Department: string;
+  Port: string;
+  IPAddress: string;
 }
 
 export interface Column {

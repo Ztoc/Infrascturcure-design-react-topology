@@ -131,7 +131,7 @@ const CustomNode: FC<
 
   const handleDoubleClick = (id: string) => {
     console.log("data", data);
-    if (data.isRoot || data.icon === "ServerIcon") {
+    if (data.isRoot || data.icon === "ServerIcon" || data.icon==="DepartmentIcon") {
       return;
     }
     router.push(`/structure?org=${id}`);
@@ -542,6 +542,8 @@ const Diagram = ({ org }: { org: string }) => {
       case DrawItemType.SAVE_DIAGRAM:
         if (!model.graph || !model.nodes || !model.edges) return;
 
+
+
         saveDiagram({
           variables: {
             diagram: {
@@ -762,7 +764,7 @@ const Diagram = ({ org }: { org: string }) => {
       }
     >
       <VisualizationProvider controller={controller}>
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Change Address</DialogTitle>

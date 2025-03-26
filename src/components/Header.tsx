@@ -30,7 +30,7 @@ import {
 import { useTheme } from "@/hook/useTheme";
 import { cn } from "@/lib/utils";
 import { Tab, Branch } from "@/type";
-import { AuthContext } from "@/context/AuthContext";
+import { AuthContext, SECURITY_STORAGE_ITEM } from "@/context/AuthContext";
 import { GET_BRANCHES } from "@/query";
 import { useQuery } from "@apollo/client";
 
@@ -100,6 +100,9 @@ const Header = () => {
 
   const handleLogout = () => {
     if (authenticated) {
+      localStorage.setItem(
+        SECURITY_STORAGE_ITEM, ""
+      )
       setAuthenticated(false);
       setUser("");
       toast.success("Successfully logged out");
